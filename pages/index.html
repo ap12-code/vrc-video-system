@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KuronekoServer VRChat Video System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">KuronekoServer VRChat Video System</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="/">API</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://discord.kuroneko6423.com">お問い合わせ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://kuroneko6423.com">ホームページ</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container px-3 pt-4">
+        <h3>利用方法</h3>
+        <p>このKuronekoServer VRChat Video Systemでは、Youtube等の動画再生はもちろん。LIVE配信を視聴することが可能となっております。</p>
+        <div>
+            
+            <div class="accordion" id="accordionAPIRoutes">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSpeakers">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpeakers" aria-expanded="true" aria-controls="collapseSpeakers">
+                            <h6>再生方法</h6>
+                        </button>
+                    </h2>
+                    <div id="collapseSpeakers" class="accordion-collapse collapse" aria-labelledby="headingSpeakers"
+                        data-bs-parent="#accordionAPIRoutes">
+                        <div class="accordion-body">
+                            <a href="https://vrc.kuroneko6423.com/proxy?url=再生したいサイトのURL">https://vrc.kuroneko6423.com/proxy?url=再生したいサイトのURL</a>で再生します。
+                            <div class="alert alert-info" role="alert">
+                                ※PCはYotubeへ転送し、再生します。それ以外はサーバー側で処理しQuest等へ配信し再生させます。<br>
+                                ※QuestでLIVEを視聴しようとするとVRChat側の不具合で上下逆になっている事があります。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingSynthesize">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSynthesize" aria-controls="collapseSynthesize">
+                            <h6>再生可能リスト</h6>
+                        </button>
+                    </h2>
+                    <div id="collapseSynthesize" class="accordion-collapse collapse" aria-labelledby="headingSynthesize"
+                        data-bs-parent="#accordionAPIRoutes">
+                        <div class="accordion-body">
+                            <a href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md">ここ</a>から再生可能リストを確認できます。
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        
+    </div>
+    <div class="px-2">
+        <br><br>©2018-2023 KuronekoServer
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

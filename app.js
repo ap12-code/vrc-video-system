@@ -1,7 +1,7 @@
 const express = require("express")()
 const ytdl = require("ytdl-core")
 
-express.get("/live", (req, res) => {
+express.get("/proxy", (req, res) => {
     let data = req.query.url
     console.log(req.headers["user-agent"])
     if (req.headers["user-agent"].includes("Mozilla")) {
@@ -14,5 +14,8 @@ express.get("/live", (req, res) => {
         }
     }
 })
+express.get("/", (req, res) => {
+    res.sendFile(__dirname + "/pages/index.html")
+});
 
 express.listen(12321)
