@@ -8,6 +8,11 @@ const numCPUs = os.cpus().length;
 const app = express();
 const port = 12321;
 
+// メトリクス用の変数
+let requestCount = 0;
+let transferCount = 0;
+let ytdlExecutionCount = 0;
+
 // キャッシュデータを保存するためのオブジェクト
 const cache = {};
 
@@ -45,7 +50,7 @@ if (cluster.isMaster) {
       return;
     }
 
-    if (req.headers["user-agent"].includes("Mozilla","Chrome/94","Chrome/90","NSPlayer")) {
+    if (req.headers["user-agent"].includes("Mozilla","Chrome","NSPlayer")) {
       res.status(302).redirect(data);
     } else {
       try {
@@ -76,10 +81,19 @@ if (cluster.isMaster) {
         res.status(404).sendFile(__dirname + "/pages/404.html");
       }
     }
+
+    // リクエスト数と転送数をインクリメント
+    requestCount++;
+    transferCount++;
   });
 
   app.get("/", (req, res) => {
     res.sendFile(__dirname + "/pages/index.html");
+  });
+
+  app.get("/metrics", (req, res) => {
+    // メトリクスを返す
+    res.send(`api_request_count ${requestCount}\napi_transfer_count ${transferCount}\nytdl_execution_count ${ytdlExecutionCount}`);
   });
 
   app.use((req, res) => {
@@ -108,5 +122,8 @@ function getYtdlStream(url) {
     stream.on("error", (err) => {
       reject(err);
     });
+
+    // ytdlの実行回数をインクリメント
+    ytdlExecutionCount++;
   });
 }
