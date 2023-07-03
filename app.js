@@ -11,12 +11,6 @@ const port = 12321;
 // キャッシュデータを保存するためのオブジェクト
 const cache = {};
 
-// メトリクスのカウンターを初期化
-let requestCount = 0;
-let apiRequestCount = 0;
-let transferCount = 0;
-let ytdlExecutionCount = 0;
-
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
@@ -33,8 +27,6 @@ if (cluster.isMaster) {
 } else {
   // ワーカープロセスの処理
   app.get("/proxy", async (req, res) => {
-    requestCount++; // リクエスト数をインクリメント
-
     let data = req.query.url;
     console.log(req.headers["user-agent"]);
 
@@ -57,16 +49,12 @@ if (cluster.isMaster) {
       res.status(302).redirect(data);
     } else {
       try {
-        apiRequestCount++; // APIへのリクエスト数をインクリメント
-
         // キャッシュにデータが存在するかチェック
         if (cache[data]) {
           console.log("Returning cached data");
           const cachedStream = cache[data];
           cachedStream.pipe(res);
         } else {
-          transferCount++; // 転送数をインクリメント
-
           // ytdlの処理を非同期に実行してストリームを取得
           const stream = await getYtdlStream(data);
 
@@ -90,13 +78,6 @@ if (cluster.isMaster) {
     }
   });
 
-  app.get("/metrics", (req, res) => {
-    // メトリクスをレスポンスとして返す
-    const metrics = `request_count ${requestCount}\napi_request_count ${apiRequestCount}\ntransfer_count ${transferCount}\nytdl_execution_count ${ytdlExecutionCount}`;
-    res.set("Content-Type", "text/plain");
-    res.send(metrics);
-  });
-
   app.get("/", (req, res) => {
     res.sendFile(__dirname + "/pages/index.html");
   });
@@ -114,8 +95,6 @@ console.log(`Server running on port ${port}`);
 
 // ytdlのストリームを取得する関数
 function getYtdlStream(url) {
-  ytdlExecutionCount++; // ytdlの実行回数をインクリメント
-
   return new Promise((resolve, reject) => {
     const stream = ytdl(url, {
       filter: (p) => p.hasAudio == true && p.hasVideo == true,
