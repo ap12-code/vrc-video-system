@@ -4,7 +4,7 @@ const cluster = require("cluster");
 const os = require("os");
 const url = require("url");
 
-const numCPUs = os.cpus().length;
+const numCPUs = 20; // プロセス数を20に設定
 const app = express();
 const port = 12321;
 
@@ -45,7 +45,7 @@ if (cluster.isMaster) {
       return;
     }
 
-    if (req.headers["user-agent"].includes("Mozilla","Chrome","NSPlayer")) {
+    if (req.headers["user-agent"].includes("Mozilla", "Chrome", "NSPlayer")) {
       res.status(302).redirect(data);
     } else {
       try {
