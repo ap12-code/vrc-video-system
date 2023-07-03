@@ -30,17 +30,20 @@ if (cluster.isMaster) {
     cluster.fork();
   });
 } else {
+  // ytdl のプロセス数を設定
+  const numYtdlProcesses = 20;
+
   // ワーカープロセスの処理
   app.get("/proxy", async (req, res) => {
     let data = req.query.url;
     console.log(req.headers["user-agent"]);
 
-    // URLにhttp://やhttps://がない場合は自動的に追加する
+    // URLに http:// や https:// がない場合は自動的に追加する
     if (!data.startsWith("http://") && !data.startsWith("https://")) {
       data = `http://${data}`;
     }
 
-    // URLのホスト名がYouTubeのものかどうかチェック
+    // URLのホスト名が YouTube のものかどうかチェック
     const hostname = url.parse(data).hostname;
     const isYouTube =
       hostname.includes("youtube.com") || hostname.includes("youtu.be");
@@ -50,7 +53,7 @@ if (cluster.isMaster) {
       return;
     }
 
-    if (req.headers["user-agent"].includes("Mozilla","Chrome","NSPlayer")) {
+    if (req.headers["user-agent"].includes("Mozilla", "Chrome", "NSPlayer")) {
       res.status(302).redirect(data);
     } else {
       try {
@@ -60,7 +63,7 @@ if (cluster.isMaster) {
           const cachedStream = cache[data];
           cachedStream.pipe(res);
         } else {
-          // ytdlの処理を非同期に実行してストリームを取得
+          // ytdl の処理を非同期に実行してストリームを取得
           const stream = await getYtdlStream(data);
 
           // ストリームの終了時にキャッシュからデータを削除
@@ -93,7 +96,9 @@ if (cluster.isMaster) {
 
   app.get("/metrics", (req, res) => {
     // メトリクスを返す
-    res.send(`api_request_count ${requestCount}\napi_transfer_count ${transferCount}\nytdl_execution_count ${ytdlExecutionCount}`);
+    res.send(
+      `api_request_count ${requestCount}\napi_transfer_count ${transferCount}\nytdl_execution_count ${ytdlExecutionCount}`
+    );
   });
 
   app.use((req, res) => {
@@ -107,12 +112,13 @@ if (cluster.isMaster) {
 
 console.log(`Server running on port ${port}`);
 
-// ytdlのストリームを取得する関数
+// ytdl のストリームを取得する関数
 function getYtdlStream(url) {
   return new Promise((resolve, reject) => {
     const stream = ytdl(url, {
       filter: (p) => p.hasAudio == true && p.hasVideo == true,
       liveBuffer: 50000,
+      spawnConcurrency: numYtdlProcesses, // ytdl のプロセス数を設定
     });
 
     stream.on("info", () => {
@@ -123,7 +129,7 @@ function getYtdlStream(url) {
       reject(err);
     });
 
-    // ytdlの実行回数をインクリメント
+    // ytdl の実行回数をインクリメント
     ytdlExecutionCount++;
   });
 }
