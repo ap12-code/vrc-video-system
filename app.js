@@ -8,6 +8,9 @@ const numCPUs = os.cpus().length;
 const app = express();
 const port = 12321;
 
+// キャッシュデータを保存するためのオブジェクト
+const cache = {};
+
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
@@ -42,13 +45,32 @@ if (cluster.isMaster) {
       return;
     }
 
-    if (req.headers["user-agent"].includes("Mozilla")) {
+    if (req.headers["user-agent"].includes("Mozilla","Chrome/94","Chrome/90","NSPlayer")) {
       res.status(302).redirect(data);
     } else {
       try {
-        // ytdlの処理を非同期に実行する
-        const stream = await getYtdlStream(data);
-        stream.pipe(res);
+        // キャッシュにデータが存在するかチェック
+        if (cache[data]) {
+          console.log("Returning cached data");
+          const cachedStream = cache[data];
+          cachedStream.pipe(res);
+        } else {
+          // ytdlの処理を非同期に実行してストリームを取得
+          const stream = await getYtdlStream(data);
+
+          // ストリームの終了時にキャッシュからデータを削除
+          stream.on("end", () => {
+            console.log("Removing cached data");
+            delete cache[data];
+          });
+
+          // レスポンスにストリームをパイプ
+          stream.pipe(res);
+
+          // キャッシュにデータを保存
+          console.log("Caching data");
+          cache[data] = stream;
+        }
       } catch {
         console.error("err");
         res.status(404).sendFile(__dirname + "/pages/404.html");
