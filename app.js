@@ -23,18 +23,19 @@ if (cluster.isMaster) {
   });
 } else {
   // ワーカープロセスの処理
-  app.get("/proxy", (req, res) => {
+  app.get("/proxy", async (req, res) => {
     let data = req.query.url;
     console.log(req.headers["user-agent"]);
 
     // URLにhttp://やhttps://がない場合は自動的に追加する
     if (!data.startsWith("http://") && !data.startsWith("https://")) {
-        data = `http://${data}`;
-      }
+      data = `http://${data}`;
+    }
 
     // URLのホスト名がYouTubeのものかどうかチェック
     const hostname = url.parse(data).hostname;
-    const isYouTube = hostname.includes("youtube.com") || hostname.includes("youtu.be");
+    const isYouTube =
+      hostname.includes("youtube.com") || hostname.includes("youtu.be");
 
     if (!isYouTube) {
       res.status(404).sendFile(__dirname + "/pages/404.html");
@@ -45,10 +46,11 @@ if (cluster.isMaster) {
       res.status(302).redirect(data);
     } else {
       try {
-        ytdl(data, {
+        const stream = ytdl(data, {
           filter: (p) => p.hasAudio == true && p.hasVideo == true,
           liveBuffer: 50000,
-        }).pipe(res);
+        });
+        stream.pipe(res);
       } catch {
         console.error("err");
         res.status(404).sendFile(__dirname + "/pages/404.html");
