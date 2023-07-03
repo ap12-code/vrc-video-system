@@ -46,10 +46,8 @@ if (cluster.isMaster) {
       res.status(302).redirect(data);
     } else {
       try {
-        const stream = ytdl(data, {
-          filter: (p) => p.hasAudio == true && p.hasVideo == true,
-          liveBuffer: 50000,
-        });
+        // ytdlの処理を非同期に実行する
+        const stream = await getYtdlStream(data);
         stream.pipe(res);
       } catch {
         console.error("err");
@@ -72,3 +70,21 @@ if (cluster.isMaster) {
 }
 
 console.log(`Server running on port ${port}`);
+
+// ytdlのストリームを取得する関数
+function getYtdlStream(url) {
+  return new Promise((resolve, reject) => {
+    const stream = ytdl(url, {
+      filter: (p) => p.hasAudio == true && p.hasVideo == true,
+      liveBuffer: 50000,
+    });
+
+    stream.on("info", () => {
+      resolve(stream);
+    });
+
+    stream.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
