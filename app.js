@@ -8,13 +8,14 @@ const numCPUs = os.cpus().length;
 const app = express();
 const port = 12321;
 
-// メトリクス用の変数
-let requestCount = 0;
-let transferCount = 0;
-let ytdlExecutionCount = 0;
-
 // キャッシュデータを保存するためのオブジェクト
 const cache = {};
+
+// メトリクスのカウンターを初期化
+let requestCount = 0;
+let apiRequestCount = 0;
+let transferCount = 0;
+let ytdlExecutionCount = 0;
 
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
@@ -30,20 +31,19 @@ if (cluster.isMaster) {
     cluster.fork();
   });
 } else {
-  // ytdl のプロセス数を設定
-  const numYtdlProcesses = 20;
-
   // ワーカープロセスの処理
   app.get("/proxy", async (req, res) => {
+    requestCount++; // リクエスト数をインクリメント
+
     let data = req.query.url;
     console.log(req.headers["user-agent"]);
 
-    // URLに http:// や https:// がない場合は自動的に追加する
+    // URLにhttp://やhttps://がない場合は自動的に追加する
     if (!data.startsWith("http://") && !data.startsWith("https://")) {
       data = `http://${data}`;
     }
 
-    // URLのホスト名が YouTube のものかどうかチェック
+    // URLのホスト名がYouTubeのものかどうかチェック
     const hostname = url.parse(data).hostname;
     const isYouTube =
       hostname.includes("youtube.com") || hostname.includes("youtu.be");
@@ -53,17 +53,21 @@ if (cluster.isMaster) {
       return;
     }
 
-    if (req.headers["user-agent"].includes("Mozilla", "Chrome", "NSPlayer")) {
+    if (req.headers["user-agent"].includes("Mozilla","Chrome","NSPlayer")) {
       res.status(302).redirect(data);
     } else {
       try {
+        apiRequestCount++; // APIへのリクエスト数をインクリメント
+
         // キャッシュにデータが存在するかチェック
         if (cache[data]) {
           console.log("Returning cached data");
           const cachedStream = cache[data];
           cachedStream.pipe(res);
         } else {
-          // ytdl の処理を非同期に実行してストリームを取得
+          transferCount++; // 転送数をインクリメント
+
+          // ytdlの処理を非同期に実行してストリームを取得
           const stream = await getYtdlStream(data);
 
           // ストリームの終了時にキャッシュからデータを削除
@@ -84,21 +88,17 @@ if (cluster.isMaster) {
         res.status(404).sendFile(__dirname + "/pages/404.html");
       }
     }
+  });
 
-    // リクエスト数と転送数をインクリメント
-    requestCount++;
-    transferCount++;
+  app.get("/metrics", (req, res) => {
+    // メトリクスをレスポンスとして返す
+    const metrics = `request_count ${requestCount}\napi_request_count ${apiRequestCount}\ntransfer_count ${transferCount}\nytdl_execution_count ${ytdlExecutionCount}`;
+    res.set("Content-Type", "text/plain");
+    res.send(metrics);
   });
 
   app.get("/", (req, res) => {
     res.sendFile(__dirname + "/pages/index.html");
-  });
-
-  app.get("/metrics", (req, res) => {
-    // メトリクスを返す
-    res.send(
-      `api_request_count ${requestCount}\napi_transfer_count ${transferCount}\nytdl_execution_count ${ytdlExecutionCount}`
-    );
   });
 
   app.use((req, res) => {
@@ -112,13 +112,14 @@ if (cluster.isMaster) {
 
 console.log(`Server running on port ${port}`);
 
-// ytdl のストリームを取得する関数
+// ytdlのストリームを取得する関数
 function getYtdlStream(url) {
+  ytdlExecutionCount++; // ytdlの実行回数をインクリメント
+
   return new Promise((resolve, reject) => {
     const stream = ytdl(url, {
       filter: (p) => p.hasAudio == true && p.hasVideo == true,
       liveBuffer: 50000,
-      spawnConcurrency: numYtdlProcesses, // ytdl のプロセス数を設定
     });
 
     stream.on("info", () => {
@@ -128,8 +129,5 @@ function getYtdlStream(url) {
     stream.on("error", (err) => {
       reject(err);
     });
-
-    // ytdl の実行回数をインクリメント
-    ytdlExecutionCount++;
   });
 }
